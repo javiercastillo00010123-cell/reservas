@@ -4,88 +4,281 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Reservas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
-        header { background: #2563eb; color: white; padding: 20px; text-align: center; }
-        header h1 { font-size: 24px; }
-        .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
-        .card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .card h2 { color: #2563eb; margin-bottom: 15px; font-size: 18px; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; }
-        .btn-primary { background: #2563eb; color: white; }
-        .btn-success { background: #16a34a; color: white; }
-        .btn-danger { background: #dc2626; color: white; }
-        .btn:hover { opacity: 0.9; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
-        th { background: #f8fafc; color: #555; }
-        .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-        .badge-pending { background: #fef3c7; color: #92400e; }
-        .badge-confirmed { background: #d1fae5; color: #065f46; }
-        .badge-cancelled { background: #fee2e2; color: #991b1b; }
-        .msg { padding: 10px; border-radius: 6px; margin-bottom: 10px; font-size: 14px; }
-        .msg-ok { background: #d1fae5; color: #065f46; }
-        .msg-err { background: #fee2e2; color: #991b1b; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; background: #e2e8f0; }
-        .tab.active { background: #2563eb; color: white; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            background: #0f0f1a;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        .bg-animation {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden;
+        }
+        .bg-animation .circle {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4;
+            animation: float 8s ease-in-out infinite;
+        }
+        .bg-animation .circle:nth-child(1) { width: 400px; height: 400px; background: #4f46e5; top: -100px; left: -100px; animation-delay: 0s; }
+        .bg-animation .circle:nth-child(2) { width: 300px; height: 300px; background: #7c3aed; top: 50%; right: -80px; animation-delay: 2s; }
+        .bg-animation .circle:nth-child(3) { width: 350px; height: 350px; background: #2563eb; bottom: -100px; left: 30%; animation-delay: 4s; }
+        .bg-animation .circle:nth-child(4) { width: 250px; height: 250px; background: #06b6d4; top: 20%; left: 60%; animation-delay: 6s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        header {
+            position: relative; z-index: 10; text-align: center; padding: 40px 20px 20px;
+        }
+        .logo-icon {
+            width: 50px; height: 50px; border-radius: 14px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            display: inline-flex; align-items: center; justify-content: center;
+            margin-bottom: 12px; box-shadow: 0 4px 20px rgba(79,70,229,0.4);
+            animation: slideDown 0.6s ease-out;
+        }
+        .logo-icon i { font-size: 22px; color: white; }
+        header h1 {
+            font-size: 32px; font-weight: 700;
+            background: linear-gradient(135deg, #818cf8, #06b6d4, #a78bfa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: slideDown 0.8s ease-out;
+        }
+        header p { color: #94a3b8; margin-top: 8px; font-size: 14px; animation: slideDown 1s ease-out; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .container { max-width: 950px; margin: 0 auto; padding: 0 20px 40px; position: relative; z-index: 10; }
+
+        .tabs {
+            display: flex; gap: 8px; margin-bottom: 25px; justify-content: center;
+            animation: fadeUp 0.6s ease-out 0.3s both;
+        }
+        .tab {
+            padding: 12px 28px; border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 14px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #94a3b8; transition: all 0.3s ease; backdrop-filter: blur(10px);
+        }
+        .tab i { margin-right: 6px; }
+        .tab:hover { background: rgba(255,255,255,0.1); color: #e0e0e0; transform: translateY(-2px); }
+        .tab.active {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white;
+            border-color: transparent; box-shadow: 0 4px 20px rgba(79,70,229,0.4);
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+            padding: 28px; margin-bottom: 20px;
+            animation: cardIn 0.5s ease-out both;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+        .card:nth-child(1) { animation-delay: 0.4s; }
+        .card:nth-child(2) { animation-delay: 0.6s; }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .card h2 {
+            font-size: 18px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+        }
+        .card h2 .icon-circle {
+            width: 32px; height: 32px; border-radius: 8px; display: inline-flex;
+            align-items: center; justify-content: center; font-size: 14px;
+        }
+        .icon-purple { background: rgba(129,140,248,0.15); color: #818cf8; }
+        .icon-cyan { background: rgba(6,182,212,0.15); color: #06b6d4; }
+        .icon-green { background: rgba(16,185,129,0.15); color: #10b981; }
+        .icon-amber { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .card h2 span {
+            background: linear-gradient(135deg, #818cf8, #06b6d4);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 12px 16px; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px; font-size: 14px; font-family: 'Inter', sans-serif;
+            background: rgba(255,255,255,0.05); color: #e0e0e0;
+            transition: all 0.3s ease; outline: none;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: #818cf8; box-shadow: 0 0 0 3px rgba(129,140,248,0.2);
+            background: rgba(255,255,255,0.08);
+        }
+        .form-group input::placeholder { color: #4a5568; }
+        .form-group select option { background: #1e1e2e; color: #e0e0e0; }
+
+        .btn {
+            padding: 12px 28px; border: none; border-radius: 10px; cursor: pointer;
+            font-size: 14px; font-weight: 600; font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+        .btn i { margin-right: 6px; }
+        .btn::after {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            width: 0; height: 0; border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: width 0.4s ease, height 0.4s ease;
+            transform: translate(-50%, -50%);
+        }
+        .btn:active::after { width: 300px; height: 300px; }
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white;
+            box-shadow: 0 4px 15px rgba(79,70,229,0.3);
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(79,70,229,0.5); }
+        .btn-success { background: linear-gradient(135deg, #059669, #10b981); color: white; padding: 8px 16px; font-size: 13px; border-radius: 8px; }
+        .btn-danger { background: linear-gradient(135deg, #dc2626, #ef4444); color: white; padding: 8px 16px; font-size: 13px; border-radius: 8px; }
+        .btn-success:hover, .btn-danger:hover { transform: translateY(-2px); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { padding: 12px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; border-bottom: 1px solid rgba(255,255,255,0.08); }
+        td { padding: 12px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        tr { transition: background 0.2s ease; }
+        tr:hover { background: rgba(255,255,255,0.03); }
+
+        .badge {
+            padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; gap: 5px;
+        }
+        .badge i { font-size: 10px; }
+        .badge-pending { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+        .badge-confirmed { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+        .badge-cancelled { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+
+        .msg {
+            padding: 14px 20px; border-radius: 10px; margin-bottom: 15px; font-size: 14px;
+            animation: msgIn 0.4s ease-out; font-weight: 500; display: flex; align-items: center; gap: 8px;
+        }
+        .msg i { font-size: 16px; }
+        .msg-ok { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+        .msg-err { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+
+        @keyframes msgIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;
+            margin-bottom: 25px; animation: fadeUp 0.6s ease-out 0.2s both;
+        }
+        .stat {
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+            padding: 18px; text-align: center; transition: transform 0.3s ease;
+        }
+        .stat:hover { transform: scale(1.05); }
+        .stat i { font-size: 18px; margin-bottom: 8px; }
+        .stat:nth-child(1) i { color: #818cf8; }
+        .stat:nth-child(2) i { color: #06b6d4; }
+        .stat:nth-child(3) i { color: #fbbf24; }
+        .stat:nth-child(4) i { color: #10b981; }
+        .stat-num { font-size: 28px; font-weight: 700; background: linear-gradient(135deg, #818cf8, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-label { font-size: 12px; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .empty-state { text-align: center; padding: 30px; color: #4a5568; }
+        .empty-state i { font-size: 40px; margin-bottom: 10px; display: block; }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 24px; }
+            .tabs { flex-wrap: wrap; }
+            .tab { padding: 10px 20px; font-size: 13px; }
+            .card { padding: 20px; }
+            table { font-size: 12px; }
+            th, td { padding: 8px 6px; }
+        }
+
+        .section { display: none; }
+        .section.active { display: block; }
     </style>
 </head>
 <body>
+<div class="bg-animation">
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
+</div>
+
 <header>
-    <h1>📅 Sistema de Reservas de Citas</h1>
+    <div class="logo-icon"><i class="fa-solid fa-calendar-check"></i></div>
+    <h1>Sistema de Reservas</h1>
+    <p>Gestion inteligente de citas y clientes</p>
 </header>
+
 <div class="container">
+    <div class="stats" id="statsBar">
+        <div class="stat"><i class="fa-solid fa-users"></i><div class="stat-num" id="statClientes">0</div><div class="stat-label">Clientes</div></div>
+        <div class="stat"><i class="fa-solid fa-calendar-days"></i><div class="stat-num" id="statCitas">0</div><div class="stat-label">Citas</div></div>
+        <div class="stat"><i class="fa-solid fa-clock"></i><div class="stat-num" id="statPendientes">0</div><div class="stat-label">Pendientes</div></div>
+        <div class="stat"><i class="fa-solid fa-circle-check"></i><div class="stat-num" id="statConfirmadas">0</div><div class="stat-label">Confirmadas</div></div>
+    </div>
+
     <div class="tabs">
-        <div class="tab active" onclick="showTab('clientes')">Clientes</div>
-        <div class="tab" onclick="showTab('citas')">Agendar Cita</div>
-        <div class="tab" onclick="showTab('listaCitas')">Ver Citas</div>
+        <div class="tab active" onclick="showTab('clientes', this)"><i class="fa-solid fa-user-plus"></i>Clientes</div>
+        <div class="tab" onclick="showTab('citas', this)"><i class="fa-solid fa-calendar-plus"></i>Agendar</div>
+        <div class="tab" onclick="showTab('listaCitas', this)"><i class="fa-solid fa-list-check"></i>Ver Citas</div>
     </div>
 
     <div id="msg"></div>
 
-    <!-- CLIENTES -->
-    <div id="clientes" class="section">
+    <div id="clientes" class="section active">
         <div class="card">
-            <h2>Nuevo Cliente</h2>
-            <div class="form-group"><label>Nombre</label><input id="cNombre" placeholder="Juan Pérez"></div>
-            <div class="form-group"><label>Teléfono</label><input id="cTelefono" placeholder="912345678"></div>
-            <div class="form-group"><label>Email</label><input id="cEmail" placeholder="juan@mail.com"></div>
-            <button class="btn btn-primary" onclick="crearCliente()">Guardar Cliente</button>
+            <h2><div class="icon-circle icon-purple"><i class="fa-solid fa-user-plus"></i></div><span>Nuevo Cliente</span></h2>
+            <div class="form-group"><label>Nombre</label><input id="cNombre" placeholder="Juan Perez"></div>
+            <div class="form-group"><label>Telefono</label><input id="cTelefono" placeholder="912345678"></div>
+            <div class="form-group"><label>Email</label><input id="cEmail" placeholder="juan@mail.com" type="email"></div>
+            <button class="btn btn-primary" onclick="crearCliente()"><i class="fa-solid fa-floppy-disk"></i>Guardar Cliente</button>
         </div>
         <div class="card">
-            <h2>Clientes Registrados</h2>
-            <table><thead><tr><th>ID</th><th>Nombre</th><th>Teléfono</th><th>Email</th></tr></thead>
+            <h2><div class="icon-circle icon-cyan"><i class="fa-solid fa-address-book"></i></div><span>Clientes Registrados</span></h2>
+            <table><thead><tr><th>ID</th><th>Nombre</th><th>Telefono</th><th>Email</th></tr></thead>
                 <tbody id="tablaClientes"></tbody></table>
         </div>
     </div>
 
-    <!-- AGENDAR CITA -->
-    <div id="citas" class="section" style="display:none">
+    <div id="citas" class="section">
         <div class="card">
-            <h2>Agendar Cita</h2>
+            <h2><div class="icon-circle icon-green"><i class="fa-solid fa-calendar-plus"></i></div><span>Agendar Nueva Cita</span></h2>
             <div class="form-group"><label>Cliente</label><select id="citaCliente"></select></div>
-            <div class="form-group"><label>Servicio</label><input id="citaServicio" placeholder="Corte de pelo"></div>
+            <div class="form-group"><label>Servicio</label><input id="citaServicio" placeholder="Corte de pelo, Manicure, Consulta..."></div>
             <div class="form-group"><label>Fecha y Hora</label><input id="citaFecha" type="datetime-local"></div>
-            <button class="btn btn-primary" onclick="crearCita()">Agendar Cita</button>
+            <button class="btn btn-primary" onclick="crearCita()"><i class="fa-solid fa-calendar-check"></i>Agendar Cita</button>
         </div>
     </div>
 
-    <!-- VER CITAS -->
-    <div id="listaCitas" class="section" style="display:none">
+    <div id="listaCitas" class="section">
         <div class="card">
-            <h2>Citas del Día</h2>
-            <div class="form-group"><label>Fecha</label><input id="filtroFecha" type="date" onchange="cargarCitasDia()"></div>
+            <h2><div class="icon-circle icon-amber"><i class="fa-solid fa-calendar-day"></i></div><span>Citas por Dia</span></h2>
+            <div class="form-group"><label>Selecciona Fecha</label><input id="filtroFecha" type="date" onchange="cargarCitasDia()"></div>
             <table><thead><tr><th>ID</th><th>Cliente</th><th>Servicio</th><th>Fecha/Hora</th><th>Estado</th><th>Acciones</th></tr></thead>
                 <tbody id="tablaCitas"></tbody></table>
         </div>
         <div class="card">
-            <h2>Todas las Citas</h2>
-            <button class="btn btn-primary" onclick="cargarTodasCitas()" style="margin-bottom:10px">Cargar Todas</button>
+            <h2><div class="icon-circle icon-purple"><i class="fa-solid fa-list-check"></i></div><span>Todas las Citas</span></h2>
+            <button class="btn btn-primary" onclick="cargarTodasCitas()" style="margin-bottom:15px"><i class="fa-solid fa-rotate"></i>Cargar Todas</button>
             <table><thead><tr><th>ID</th><th>Cliente</th><th>Servicio</th><th>Fecha/Hora</th><th>Estado</th><th>Acciones</th></tr></thead>
                 <tbody id="tablaTodasCitas"></tbody></table>
         </div>
@@ -95,34 +288,43 @@
 <script>
     const API = '';
 
-    function showTab(id) {
-        document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+    function showTab(id, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById(id).style.display = 'block';
-        event.target.classList.add('active');
+        document.getElementById(id).classList.add('active');
+        el.classList.add('active');
+        document.getElementById(id).querySelectorAll('.card').forEach((c, i) => {
+            c.style.animation = 'none'; c.offsetHeight;
+            c.style.animation = `cardIn 0.5s ease-out ${i * 0.15}s both`;
+        });
         if (id === 'clientes') cargarClientes();
-        if (id === 'citas') { cargarClientes(); cargarSelectClientes(); }
+        if (id === 'citas') cargarSelectClientes();
+        if (id === 'listaCitas') cargarTodasCitas();
     }
 
     function msg(txt, ok) {
         const el = document.getElementById('msg');
+        const icon = ok ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-triangle-exclamation"></i>';
         el.className = 'msg ' + (ok ? 'msg-ok' : 'msg-err');
-        el.textContent = txt;
-        setTimeout(() => el.textContent = '', 3000);
+        el.innerHTML = icon + txt;
+        setTimeout(() => { el.innerHTML = ''; el.className = ''; }, 3000);
     }
 
     function badge(estado) {
-        const cls = estado === 'CONFIRMADA' ? 'badge-confirmed' : estado === 'CANCELADA' ? 'badge-cancelled' : 'badge-pending';
-        return `<span class="badge ${cls}">${estado}</span>`;
+        if (estado === 'CONFIRMADA') return '<span class="badge badge-confirmed"><i class="fa-solid fa-check"></i>Confirmada</span>';
+        if (estado === 'CANCELADA') return '<span class="badge badge-cancelled"><i class="fa-solid fa-xmark"></i>Cancelada</span>';
+        return '<span class="badge badge-pending"><i class="fa-solid fa-clock"></i>Pendiente</span>';
     }
 
     function botones(id, estado) {
-        let html = '';
-        if (estado === 'PENDIENTE') {
-            html += `<button class="btn btn-success" onclick="confirmarCita(${id})">✓</button> `;
-            html += `<button class="btn btn-danger" onclick="cancelarCita(${id})">✗</button>`;
-        }
-        return html;
+        if (estado !== 'PENDIENTE') return '';
+        return `<button class="btn btn-success" onclick="confirmarCita(${id})" title="Confirmar"><i class="fa-solid fa-check"></i></button> <button class="btn btn-danger" onclick="cancelarCita(${id})" title="Cancelar"><i class="fa-solid fa-xmark"></i></button>`;
+    }
+
+    function formatFecha(f) {
+        if (!f) return '';
+        const d = new Date(f);
+        return d.toLocaleDateString('es-CL') + ' ' + d.toLocaleTimeString('es-CL', {hour:'2-digit', minute:'2-digit'});
     }
 
     async function crearCliente() {
@@ -131,12 +333,12 @@
                 method: 'POST', headers: {'Content-Type':'application/json'},
                 body: JSON.stringify({ nombre: document.getElementById('cNombre').value, telefono: document.getElementById('cTelefono').value, email: document.getElementById('cEmail').value })
             });
-            if (!res.ok) throw new Error('Error al guardar');
-            msg('Cliente guardado', true);
+            if (!res.ok) throw new Error('Verifica los datos ingresados');
+            msg('Cliente guardado exitosamente', true);
             document.getElementById('cNombre').value = '';
             document.getElementById('cTelefono').value = '';
             document.getElementById('cEmail').value = '';
-            cargarClientes();
+            cargarClientes(); cargarStats();
         } catch(e) { msg(e.message, false); }
     }
 
@@ -144,9 +346,9 @@
         try {
             const res = await fetch(API + '/api/clientes');
             const data = await res.json();
-            document.getElementById('tablaClientes').innerHTML = data.map(c =>
-                `<tr><td>${c.id}</td><td>${c.nombre}</td><td>${c.telefono||''}</td><td>${c.email||''}</td></tr>`
-            ).join('');
+            document.getElementById('tablaClientes').innerHTML = data.length ? data.map(c =>
+                `<tr><td>${c.id}</td><td>${c.nombre}</td><td>${c.telefono||'-'}</td><td>${c.email||'-'}</td></tr>`
+            ).join('') : '<tr><td colspan="4"><div class="empty-state"><i class="fa-solid fa-users"></i>No hay clientes registrados</div></td></tr>';
         } catch(e) {}
     }
 
@@ -166,10 +368,11 @@
                 method: 'POST', headers: {'Content-Type':'application/json'},
                 body: JSON.stringify({ fechaHora: document.getElementById('citaFecha').value, servicio: document.getElementById('citaServicio').value, cliente: { id: parseInt(document.getElementById('citaCliente').value) } })
             });
-            if (!res.ok) throw new Error('Error al agendar');
-            msg('Cita agendada', true);
+            if (!res.ok) throw new Error('Verifica los datos ingresados');
+            msg('Cita agendada exitosamente', true);
             document.getElementById('citaServicio').value = '';
             document.getElementById('citaFecha').value = '';
+            cargarStats();
         } catch(e) { msg(e.message, false); }
     }
 
@@ -179,9 +382,9 @@
         try {
             const res = await fetch(API + '/api/citas/dia?fecha=' + fecha);
             const data = await res.json();
-            document.getElementById('tablaCitas').innerHTML = data.map(c =>
-                `<tr><td>${c.id}</td><td>${c.cliente?.nombre||''}</td><td>${c.servicio}</td><td>${c.fechaHora}</td><td>${badge(c.estado)}</td><td>${botones(c.id,c.estado)}</td></tr>`
-            ).join('');
+            document.getElementById('tablaCitas').innerHTML = data.length ? data.map(c =>
+                `<tr><td>${c.id}</td><td>${c.cliente?.nombre||'-'}</td><td>${c.servicio}</td><td>${formatFecha(c.fechaHora)}</td><td>${badge(c.estado)}</td><td>${botones(c.id,c.estado)}</td></tr>`
+            ).join('') : '<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-calendar-xmark"></i>No hay citas para este dia</div></td></tr>';
         } catch(e) {}
     }
 
@@ -189,25 +392,38 @@
         try {
             const res = await fetch(API + '/api/citas');
             const data = await res.json();
-            document.getElementById('tablaTodasCitas').innerHTML = data.map(c =>
-                `<tr><td>${c.id}</td><td>${c.cliente?.nombre||''}</td><td>${c.servicio}</td><td>${c.fechaHora}</td><td>${badge(c.estado)}</td><td>${botones(c.id,c.estado)}</td></tr>`
-            ).join('');
+            document.getElementById('tablaTodasCitas').innerHTML = data.length ? data.map(c =>
+                `<tr><td>${c.id}</td><td>${c.cliente?.nombre||'-'}</td><td>${c.servicio}</td><td>${formatFecha(c.fechaHora)}</td><td>${badge(c.estado)}</td><td>${botones(c.id,c.estado)}</td></tr>`
+            ).join('') : '<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-calendar-xmark"></i>No hay citas registradas</div></td></tr>';
         } catch(e) {}
     }
 
     async function confirmarCita(id) {
         await fetch(API + '/api/citas/' + id + '/confirmar', { method: 'PUT' });
         msg('Cita confirmada', true);
-        cargarTodasCitas(); cargarCitasDia();
+        cargarTodasCitas(); cargarCitasDia(); cargarStats();
     }
 
     async function cancelarCita(id) {
         await fetch(API + '/api/citas/' + id + '/cancelar', { method: 'PUT' });
         msg('Cita cancelada', true);
-        cargarTodasCitas(); cargarCitasDia();
+        cargarTodasCitas(); cargarCitasDia(); cargarStats();
+    }
+
+    async function cargarStats() {
+        try {
+            const [cRes, citRes] = await Promise.all([fetch(API+'/api/clientes'), fetch(API+'/api/citas')]);
+            const clientes = await cRes.json();
+            const citas = await citRes.json();
+            document.getElementById('statClientes').textContent = clientes.length;
+            document.getElementById('statCitas').textContent = citas.length;
+            document.getElementById('statPendientes').textContent = citas.filter(c=>c.estado==='PENDIENTE').length;
+            document.getElementById('statConfirmadas').textContent = citas.filter(c=>c.estado==='CONFIRMADA').length;
+        } catch(e) {}
     }
 
     cargarClientes();
+    cargarStats();
 </script>
 </body>
 </html>
