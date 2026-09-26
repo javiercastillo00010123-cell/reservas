@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Reservas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
+        header { background: #2563eb; color: white; padding: 20px; text-align: center; }
+        header h1 { font-size: 24px; }
+        .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
+        .card { background: white; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .card h2 { color: #2563eb; margin-bottom: 15px; font-size: 18px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 14px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-success { background: #16a34a; color: white; }
+        .btn-danger { background: #dc2626; color: white; }
+        .btn:hover { opacity: 0.9; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+        th { background: #f8fafc; color: #555; }
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-confirmed { background: #d1fae5; color: #065f46; }
+        .badge-cancelled { background: #fee2e2; color: #991b1b; }
+        .msg { padding: 10px; border-radius: 6px; margin-bottom: 10px; font-size: 14px; }
+        .msg-ok { background: #d1fae5; color: #065f46; }
+        .msg-err { background: #fee2e2; color: #991b1b; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab { padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; background: #e2e8f0; }
+        .tab.active { background: #2563eb; color: white; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>📅 Sistema de Reservas de Citas</h1>
+</header>
+<div class="container">
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('clientes')">Clientes</div>
+        <div class="tab" onclick="showTab('citas')">Agendar Cita</div>
+        <div class="tab" onclick="showTab('listaCitas')">Ver Citas</div>
+    </div>
+
+    <div id="msg"></div>
+
+    <!-- CLIENTES -->
+    <div id="clientes" class="section">
+        <div class="card">
+            <h2>Nuevo Cliente</h2>
+            <div class="form-group"><label>Nombre</label><input id="cNombre" placeholder="Juan Pérez"></div>
+            <div class="form-group"><label>Teléfono</label><input id="cTelefono" placeholder="912345678"></div>
+            <div class="form-group"><label>Email</label><input id="cEmail" placeholder="juan@mail.com"></div>
+            <button class="btn btn-primary" onclick="crearCliente()">Guardar Cliente</button>
+        </div>
+        <div class="card">
+            <h2>Clientes Registrados</h2>
+            <table><thead><tr><th>ID</th><th>Nombre</th><th>Teléfono</th><th>Email</th></tr></thead>
+                <tbody id="tablaClientes"></tbody></table>
+        </div>
+    </div>
+
+    <!-- AGENDAR CITA -->
+    <div id="citas" class="section" style="display:none">
+        <div class="card">
+            <h2>Agendar Cita</h2>
+            <div class="form-group"><label>Cliente</label><select id="citaCliente"></select></div>
+            <div class="form-group"><label>Servicio</label><input id="citaServicio" placeholder="Corte de pelo"></div>
+            <div class="form-group"><label>Fecha y Hora</label><input id="citaFecha" type="datetime-local"></div>
+            <button class="btn btn-primary" onclick="crearCita()">Agendar Cita</button>
+        </div>
+    </div>
+
+    <!-- VER CITAS -->
+    <div id="listaCitas" class="section" style="display:none">
+        <div class="card">
+            <h2>Citas del Día</h2>
+            <div class="form-group"><label>Fecha</label><input id="filtroFecha" type="date" onchange="cargarCitasDia()"></div>
+            <table><thead><tr><th>ID</th><th>Cliente</th><th>Servicio</th><th>Fecha/Hora</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody id="tablaCitas"></tbody></table>
+        </div>
+        <div class="card">
+            <h2>Todas las Citas</h2>
+            <button class="btn btn-primary" onclick="cargarTodasCitas()" style="margin-bottom:10px">Cargar Todas</button>
+            <table><thead><tr><th>ID</th><th>Cliente</th><th>Servicio</th><th>Fecha/Hora</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody id="tablaTodasCitas"></tbody></table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = '';
+
+    function showTab(id) {
+        document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(id).style.display = 'block';
+        event.target.classList.add('active');
+        if (id === 'clientes') cargarClientes();
+        if (id === 'citas') { cargarClientes(); cargarSelectClientes(); }
+    }
+
+    function msg(txt, ok) {
+        const el = document.getElementById('msg');
+        el.className = 'msg ' + (ok ? 'msg-ok' : 'msg-err');
+        el.textContent = txt;
+        setTimeout(() => el.textContent = '', 3000);
+    }
+
+    function badge(estado) {
+        const cls = estado === 'CONFIRMADA' ? 'badge-confirmed' : estado === 'CANCELADA' ? 'badge-cancelled' : 'badge-pending';
+        return `<span class="badge ${cls}">${estado}</span>`;
+    }
+
+    function botones(id, estado) {
+        let html = '';
+        if (estado === 'PENDIENTE') {
+            html += `<button class="btn btn-success" onclick="confirmarCita(${id})">✓</button> `;
+            html += `<button class="btn btn-danger" onclick="cancelarCita(${id})">✗</button>`;
+        }
+        return html;
+    }
+
+    async function crearCliente() {
+        try {
+            const res = await fetch(API + '/api/clientes', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ nombre: document.getElementById('cNombre').value, telefono: document.getElementById('cTelefono').value, email: document.getElementById('cEmail').value })
+            });
+            if (!res.ok) throw new Error('Error al guardar');
+            msg('Cliente guardado', true);
+            document.getElementById('cNombre').value = '';
+            document.getElementById('cTelefono').value = '';
+            document.getElementById('cEmail').value = '';
+            cargarClientes();
+        } catch(e) { msg(e.message, false); }
+    }
+
+    async function cargarClientes() {
+        try {
+            const res = await fetch(API + '/api/clientes');
+            const data = await res.json();
+            document.getElementById('tablaClientes').innerHTML = data.map(c =>
+                `<tr><td>${c.id}</td><td>${c.nombre}</td><td>${c.telefono||''}</td><td>${c.email||''}</td></tr>`
+            ).join('');
+        } catch(e) {}
+    }
+
+    async function cargarSelectClientes() {
+        try {
+            const res = await fetch(API + '/api/clientes');
+            const data = await res.json();
+            document.getElementById('citaCliente').innerHTML = data.map(c =>
+                `<option value="${c.id}">${c.nombre}</option>`
+            ).join('');
+        } catch(e) {}
+    }
+
+    async function crearCita() {
+        try {
+            const res = await fetch(API + '/api/citas', {
+                method: 'POST', headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ fechaHora: document.getElementById('citaFecha').value, servicio: document.getElementById('citaServicio').value, cliente: { id: parseInt(document.getElementById('citaCliente').value) } })
+            });
+            if (!res.ok) throw new Error('Error al agendar');
+            msg('Cita agendada', true);
+            document.getElementById('citaServicio').value = '';
+            document.getElementById('citaFecha').value = '';
+        } catch(e) { msg(e.message, false); }
+    }
+
+    async function cargarCitasDia() {
+        const fecha = document.getElementById('filtroFecha').value;
+        if (!fecha) return;
+        try {
+            const res = await fetch(API + '/api/citas/dia?fecha=' + fecha);
+            const data = await res.json();
+            document.getElementById('tablaCitas').innerHTML = data.map(c =>
+                `<tr><td>${c.id}</td><td>${c.cliente?.nombre||''}</td><td>${c.servicio}</td><td>${c.fechaHora}</td><td>${badge(c.estado)}</td><td>${botones(c.id,c.estado)}</td></tr>`
+            ).join('');
+        } catch(e) {}
+    }
+
+    async function cargarTodasCitas() {
+        try {
+            const res = await fetch(API + '/api/citas');
+            const data = await res.json();
+            document.getElementById('tablaTodasCitas').innerHTML = data.map(c =>
+                `<tr><td>${c.id}</td><td>${c.cliente?.nombre||''}</td><td>${c.servicio}</td><td>${c.fechaHora}</td><td>${badge(c.estado)}</td><td>${botones(c.id,c.estado)}</td></tr>`
+            ).join('');
+        } catch(e) {}
+    }
+
+    async function confirmarCita(id) {
+        await fetch(API + '/api/citas/' + id + '/confirmar', { method: 'PUT' });
+        msg('Cita confirmada', true);
+        cargarTodasCitas(); cargarCitasDia();
+    }
+
+    async function cancelarCita(id) {
+        await fetch(API + '/api/citas/' + id + '/cancelar', { method: 'PUT' });
+        msg('Cita cancelada', true);
+        cargarTodasCitas(); cargarCitasDia();
+    }
+
+    cargarClientes();
+</script>
+</body>
+</html>
