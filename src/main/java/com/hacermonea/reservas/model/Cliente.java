@@ -18,7 +18,8 @@ public class Cliente {
 
     private String telefono;
 
-    @Email(message = "El email no tiene un formato válido")
+    @Email(message = "El email no tiene un formato valido")
+    @Column(unique = true)
     private String email;
 
     public Long getId() { return id; }

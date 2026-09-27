@@ -201,6 +201,8 @@
         .empty-state { text-align: center; padding: 30px; color: #4a5568; }
         .empty-state i { font-size: 40px; margin-bottom: 10px; display: block; }
 
+        .actions-cell { display: flex; gap: 6px; }
+
         @media (max-width: 600px) {
             header h1 { font-size: 24px; }
             .tabs { flex-wrap: wrap; }
@@ -254,7 +256,7 @@
         </div>
         <div class="card">
             <h2><div class="icon-circle icon-cyan"><i class="fa-solid fa-address-book"></i></div><span>Clientes Registrados</span></h2>
-            <table><thead><tr><th>ID</th><th>Nombre</th><th>Telefono</th><th>Email</th></tr></thead>
+            <table><thead><tr><th>ID</th><th>Nombre</th><th>Telefono</th><th>Email</th><th>Acciones</th></tr></thead>
                 <tbody id="tablaClientes"></tbody></table>
         </div>
     </div>
@@ -316,9 +318,9 @@
         return '<span class="badge badge-pending"><i class="fa-solid fa-clock"></i>Pendiente</span>';
     }
 
-    function botones(id, estado) {
+    function botonesCita(id, estado) {
         if (estado !== 'PENDIENTE') return '';
-        return `<button class="btn btn-success" onclick="confirmarCita(${id})" title="Confirmar"><i class="fa-solid fa-check"></i></button> <button class="btn btn-danger" onclick="cancelarCita(${id})" title="Cancelar"><i class="fa-solid fa-xmark"></i></button>`;
+        return `<div class="actions-cell"><button class="btn btn-success" onclick="confirmarCita(${id})" title="Confirmar"><i class="fa-solid fa-check"></i></button><button class="btn btn-danger" onclick="cancelarCita(${id})" title="Cancelar"><i class="fa-solid fa-xmark"></i></button></div>`;
     }
 
     function formatFecha(f) {
@@ -333,7 +335,8 @@
                 method: 'POST', headers: {'Content-Type':'application/json'},
                 body: JSON.stringify({ nombre: document.getElementById('cNombre').value, telefono: document.getElementById('cTelefono').value, email: document.getElementById('cEmail').value })
             });
-            if (!res.ok) throw new Error('Verifica los datos ingresados');
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Verifica los datos ingresados');
             msg('Cliente guardado exitosamente', true);
             document.getElementById('cNombre').value = '';
             document.getElementById('cTelefono').value = '';
@@ -347,9 +350,19 @@
             const res = await fetch(API + '/api/clientes');
             const data = await res.json();
             document.getElementById('tablaClientes').innerHTML = data.length ? data.map(c =>
-                `<tr><td>${c.id}</td><td>${c.nombre}</td><td>${c.telefono||'-'}</td><td>${c.email||'-'}</td></tr>`
-            ).join('') : '<tr><td colspan="4"><div class="empty-state"><i class="fa-solid fa-users"></i>No hay clientes registrados</div></td></tr>';
+                `<tr><td>${c.id}</td><td>${c.nombre}</td><td>${c.telefono||'-'}</td><td>${c.email||'-'}</td><td><button class="btn btn-danger" onclick="eliminarCliente(${c.id})" title="Eliminar"><i class="fa-solid fa-trash"></i></button></td></tr>`
+            ).join('') : '<tr><td colspan="5"><div class="empty-state"><i class="fa-solid fa-users"></i>No hay clientes registrados</div></td></tr>';
         } catch(e) {}
+    }
+
+    async function eliminarCliente(id) {
+        if (!confirm('Seguro que quieres eliminar este cliente?')) return;
+        try {
+            const res = await fetch(API + '/api/clientes/' + id, { method: 'DELETE' });
+            if (!res.ok) throw new Error('No se pudo eliminar');
+            msg('Cliente eliminado', true);
+            cargarClientes(); cargarStats();
+        } catch(e) { msg(e.message, false); }
     }
 
     async function cargarSelectClientes() {
@@ -383,7 +396,7 @@
             const res = await fetch(API + '/api/citas/dia?fecha=' + fecha);
             const data = await res.json();
             document.getElementById('tablaCitas').innerHTML = data.length ? data.map(c =>
-                `<tr><td>${c.id}</td><td>${c.cliente?.nombre||'-'}</td><td>${c.servicio}</td><td>${formatFecha(c.fechaHora)}</td><td>${badge(c.estado)}</td><td>${botones(c.id,c.estado)}</td></tr>`
+                `<tr><td>${c.id}</td><td>${c.cliente?.nombre||'-'}</td><td>${c.servicio}</td><td>${formatFecha(c.fechaHora)}</td><td>${badge(c.estado)}</td><td>${botonesCita(c.id,c.estado)}</td></tr>`
             ).join('') : '<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-calendar-xmark"></i>No hay citas para este dia</div></td></tr>';
         } catch(e) {}
     }
@@ -393,7 +406,7 @@
             const res = await fetch(API + '/api/citas');
             const data = await res.json();
             document.getElementById('tablaTodasCitas').innerHTML = data.length ? data.map(c =>
-                `<tr><td>${c.id}</td><td>${c.cliente?.nombre||'-'}</td><td>${c.servicio}</td><td>${formatFecha(c.fechaHora)}</td><td>${badge(c.estado)}</td><td>${botones(c.id,c.estado)}</td></tr>`
+                `<tr><td>${c.id}</td><td>${c.cliente?.nombre||'-'}</td><td>${c.servicio}</td><td>${formatFecha(c.fechaHora)}</td><td>${badge(c.estado)}</td><td>${botonesCita(c.id,c.estado)}</td></tr>`
             ).join('') : '<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-calendar-xmark"></i>No hay citas registradas</div></td></tr>';
         } catch(e) {}
     }
